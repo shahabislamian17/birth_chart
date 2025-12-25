@@ -45,8 +45,11 @@ import {
   PlacementDesc,
   PlacementDetail,
   InterpretationSection,
+  InterpretationToggle,
   InterpretationTitle,
+  InterpretationContent,
   InterpretationText,
+  ChevronIcon,
 } from './result-styles'
 import { generateInterpretation } from './interpretations'
 
@@ -268,12 +271,27 @@ const monthNames = [
 
 export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPageProps) {
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart')
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
   
   // Debug: Log the API chart data (remove in production)
   if (process.env.NODE_ENV === 'development') {
     console.log('ResultPage - apiChartData:', apiChartData)
     console.log('ResultPage - chartSvgUrl:', apiChartData?.chartSvgUrl)
   }
+
+  const toggleSection = (sectionKey: string) => {
+    setExpandedSections((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(sectionKey)) {
+        newSet.delete(sectionKey)
+      } else {
+        newSet.add(sectionKey)
+      }
+      return newSet
+    })
+  }
+
+  const isExpanded = (sectionKey: string) => expandedSections.has(sectionKey)
 
   const formatDate = () => {
     const monthName = monthNames[parseInt(chartData.month) - 1] || ''
@@ -429,28 +447,33 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
 
         <Section>
           <SectionTitle>The Keys to {chartData.name}'s Chart</SectionTitle>
-          {sampleChartData.keys.map((item, index) => (
-            <PlacementItem key={index}>
-              <PlacementHeader>
-                <PlacementIcon
-                  src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
-                  alt={item.name}
-                />
-                <PlacementInfo>
-                  {item.name} | {item.sign} | {item.degree} | {item.house}
-                </PlacementInfo>
-              </PlacementHeader>
-              <PlacementDesc>{item.desc}</PlacementDesc>
-              <PlacementDetail>{item.detail}</PlacementDetail>
-              {(() => {
-                const interpretation = generateInterpretation({
-                  name: item.name,
-                  sign: item.sign,
-                  degree: item.degree,
-                  house: item.house
-                })
-                return (
-                  <InterpretationSection>
+          {sampleChartData.keys.map((item, index) => {
+            const sectionKey = `keys-${index}`
+            const interpretation = generateInterpretation({
+              name: item.name,
+              sign: item.sign,
+              degree: item.degree,
+              house: item.house
+            })
+            return (
+              <PlacementItem key={index}>
+                <PlacementHeader>
+                  <PlacementIcon
+                    src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
+                    alt={item.name}
+                  />
+                  <PlacementInfo>
+                    {item.name} | {item.sign} | {item.degree} | {item.house}
+                  </PlacementInfo>
+                </PlacementHeader>
+                <PlacementDesc>{item.desc}</PlacementDesc>
+                <PlacementDetail>{item.detail}</PlacementDetail>
+                <InterpretationSection>
+                  <InterpretationToggle onClick={() => toggleSection(sectionKey)}>
+                    <InterpretationTitle>View Details</InterpretationTitle>
+                    <ChevronIcon $isExpanded={isExpanded(sectionKey)} />
+                  </InterpretationToggle>
+                  <InterpretationContent $isExpanded={isExpanded(sectionKey)}>
                     <InterpretationTitle>What You Are</InterpretationTitle>
                     <InterpretationText>{interpretation.whatYouAre}</InterpretationText>
                     
@@ -459,37 +482,42 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
                     
                     <InterpretationTitle>Detailed Analysis</InterpretationTitle>
                     <InterpretationText>{interpretation.detailedAnalysis}</InterpretationText>
-                  </InterpretationSection>
-                )
-              })()}
-            </PlacementItem>
-          ))}
+                  </InterpretationContent>
+                </InterpretationSection>
+              </PlacementItem>
+            )
+          })}
         </Section>
 
         <Section>
           <SectionTitle>The Planets</SectionTitle>
-          {sampleChartData.planets.map((item, index) => (
-            <PlacementItem key={index}>
-              <PlacementHeader>
-                <PlacementIcon
-                  src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
-                  alt={item.name}
-                />
-                <PlacementInfo>
-                  {item.name} | {item.sign} | {item.degree} | {item.house}
-                </PlacementInfo>
-              </PlacementHeader>
-              <PlacementDesc>{item.desc}</PlacementDesc>
-              <PlacementDetail>{item.detail}</PlacementDetail>
-              {(() => {
-                const interpretation = generateInterpretation({
-                  name: item.name,
-                  sign: item.sign,
-                  degree: item.degree,
-                  house: item.house
-                })
-                return (
-                  <InterpretationSection>
+          {sampleChartData.planets.map((item, index) => {
+            const sectionKey = `planets-${index}`
+            const interpretation = generateInterpretation({
+              name: item.name,
+              sign: item.sign,
+              degree: item.degree,
+              house: item.house
+            })
+            return (
+              <PlacementItem key={index}>
+                <PlacementHeader>
+                  <PlacementIcon
+                    src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
+                    alt={item.name}
+                  />
+                  <PlacementInfo>
+                    {item.name} | {item.sign} | {item.degree} | {item.house}
+                  </PlacementInfo>
+                </PlacementHeader>
+                <PlacementDesc>{item.desc}</PlacementDesc>
+                <PlacementDetail>{item.detail}</PlacementDetail>
+                <InterpretationSection>
+                  <InterpretationToggle onClick={() => toggleSection(sectionKey)}>
+                    <InterpretationTitle>View Details</InterpretationTitle>
+                    <ChevronIcon $isExpanded={isExpanded(sectionKey)} />
+                  </InterpretationToggle>
+                  <InterpretationContent $isExpanded={isExpanded(sectionKey)}>
                     <InterpretationTitle>What You Are</InterpretationTitle>
                     <InterpretationText>{interpretation.whatYouAre}</InterpretationText>
                     
@@ -498,37 +526,42 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
                     
                     <InterpretationTitle>Detailed Analysis</InterpretationTitle>
                     <InterpretationText>{interpretation.detailedAnalysis}</InterpretationText>
-                  </InterpretationSection>
-                )
-              })()}
-            </PlacementItem>
-          ))}
+                  </InterpretationContent>
+                </InterpretationSection>
+              </PlacementItem>
+            )
+          })}
         </Section>
 
         <Section>
           <SectionTitle>The Angles</SectionTitle>
-          {sampleChartData.angles.map((item, index) => (
-            <PlacementItem key={index}>
-              <PlacementHeader>
-                <PlacementIcon
-                  src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
-                  alt={item.name}
-                />
-                <PlacementInfo>
-                  {item.name} | {item.sign} | {item.degree} | {item.house}
-                </PlacementInfo>
-              </PlacementHeader>
-              <PlacementDesc>{item.desc}</PlacementDesc>
-              <PlacementDetail>{item.detail}</PlacementDetail>
-              {(() => {
-                const interpretation = generateInterpretation({
-                  name: item.name,
-                  sign: item.sign,
-                  degree: item.degree,
-                  house: item.house
-                })
-                return (
-                  <InterpretationSection>
+          {sampleChartData.angles.map((item, index) => {
+            const sectionKey = `angles-${index}`
+            const interpretation = generateInterpretation({
+              name: item.name,
+              sign: item.sign,
+              degree: item.degree,
+              house: item.house
+            })
+            return (
+              <PlacementItem key={index}>
+                <PlacementHeader>
+                  <PlacementIcon
+                    src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
+                    alt={item.name}
+                  />
+                  <PlacementInfo>
+                    {item.name} | {item.sign} | {item.degree} | {item.house}
+                  </PlacementInfo>
+                </PlacementHeader>
+                <PlacementDesc>{item.desc}</PlacementDesc>
+                <PlacementDetail>{item.detail}</PlacementDetail>
+                <InterpretationSection>
+                  <InterpretationToggle onClick={() => toggleSection(sectionKey)}>
+                    <InterpretationTitle>View Details</InterpretationTitle>
+                    <ChevronIcon $isExpanded={isExpanded(sectionKey)} />
+                  </InterpretationToggle>
+                  <InterpretationContent $isExpanded={isExpanded(sectionKey)}>
                     <InterpretationTitle>What You Are</InterpretationTitle>
                     <InterpretationText>{interpretation.whatYouAre}</InterpretationText>
                     
@@ -537,37 +570,42 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
                     
                     <InterpretationTitle>Detailed Analysis</InterpretationTitle>
                     <InterpretationText>{interpretation.detailedAnalysis}</InterpretationText>
-                  </InterpretationSection>
-                )
-              })()}
-            </PlacementItem>
-          ))}
+                  </InterpretationContent>
+                </InterpretationSection>
+              </PlacementItem>
+            )
+          })}
         </Section>
 
         <Section>
           <SectionTitle>The Points, Minor Planets and Asteroids</SectionTitle>
-          {sampleChartData.points.map((item, index) => (
-            <PlacementItem key={index}>
-              <PlacementHeader>
-                <PlacementIcon
-                  src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
-                  alt={item.name}
-                />
-                <PlacementInfo>
-                  {item.name} | {item.sign} | {item.degree} | {item.house}
-                </PlacementInfo>
-              </PlacementHeader>
-              <PlacementDesc>{item.desc}</PlacementDesc>
-              <PlacementDetail>{item.detail}</PlacementDetail>
-              {(() => {
-                const interpretation = generateInterpretation({
-                  name: item.name,
-                  sign: item.sign,
-                  degree: item.degree,
-                  house: item.house
-                })
-                return (
-                  <InterpretationSection>
+          {sampleChartData.points.map((item, index) => {
+            const sectionKey = `points-${index}`
+            const interpretation = generateInterpretation({
+              name: item.name,
+              sign: item.sign,
+              degree: item.degree,
+              house: item.house
+            })
+            return (
+              <PlacementItem key={index}>
+                <PlacementHeader>
+                  <PlacementIcon
+                    src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
+                    alt={item.name}
+                  />
+                  <PlacementInfo>
+                    {item.name} | {item.sign} | {item.degree} | {item.house}
+                  </PlacementInfo>
+                </PlacementHeader>
+                <PlacementDesc>{item.desc}</PlacementDesc>
+                <PlacementDetail>{item.detail}</PlacementDetail>
+                <InterpretationSection>
+                  <InterpretationToggle onClick={() => toggleSection(sectionKey)}>
+                    <InterpretationTitle>View Details</InterpretationTitle>
+                    <ChevronIcon $isExpanded={isExpanded(sectionKey)} />
+                  </InterpretationToggle>
+                  <InterpretationContent $isExpanded={isExpanded(sectionKey)}>
                     <InterpretationTitle>What You Are</InterpretationTitle>
                     <InterpretationText>{interpretation.whatYouAre}</InterpretationText>
                     
@@ -576,11 +614,11 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
                     
                     <InterpretationTitle>Detailed Analysis</InterpretationTitle>
                     <InterpretationText>{interpretation.detailedAnalysis}</InterpretationText>
-                  </InterpretationSection>
-                )
-              })()}
-            </PlacementItem>
-          ))}
+                  </InterpretationContent>
+                </InterpretationSection>
+              </PlacementItem>
+            )
+          })}
         </Section>
       </ResultContent>
     </ResultContainer>

@@ -428,17 +428,65 @@ export const InterpretationSection = styled.div`
   border-top: 1px solid #333;
 `
 
+export const InterpretationToggle = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'gt-america', sans-serif;
+  text-align: left;
+  transition: all 0.2s;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+`
+
 export const InterpretationTitle = styled.h6`
   font-family: 'gt-america', sans-serif;
   font-size: 0.875rem;
   font-weight: 600;
   color: #f5f5f5;
-  margin: 16px 0 8px;
+  margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+`
+
+export const ChevronIcon = styled.span<{ $isExpanded: boolean }>`
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+  transform: ${(props) => (props.$isExpanded ? 'rotate(180deg)' : 'rotate(0deg)')};
   
-  &:first-child {
-    margin-top: 0;
+  &::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 6px solid #f5f5f5;
+  }
+`
+
+export const InterpretationContent = styled.div<{ $isExpanded: boolean }>`
+  max-height: ${(props) => (props.$isExpanded ? '5000px' : '0')};
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: ${(props) => (props.$isExpanded ? '1' : '0')};
+  
+  ${InterpretationTitle} {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    
+    &:first-child {
+      margin-top: 12px;
+    }
   }
 `
 
