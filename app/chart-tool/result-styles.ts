@@ -80,6 +80,17 @@ export const ChartWrapper = styled.div`
   align-items: center;
   justify-content: center;
   position: relative;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: scale(1.01);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+  }
+  
+  &:active {
+    transform: scale(0.99);
+  }
   
   @media (max-width: 767px) {
     min-height: 400px;
@@ -188,6 +199,8 @@ export const ChartInstructions = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  pointer-events: none;
+  z-index: 5;
   
   p {
     font-family: 'gt-america', sans-serif;
@@ -436,10 +449,12 @@ export const InterpretationToggle = styled.button`
   padding: 12px 0;
   background: none;
   border: none;
+  border-bottom: 1px solid #333;
   cursor: pointer;
   font-family: 'gt-america', sans-serif;
   text-align: left;
   transition: all 0.2s;
+  margin-bottom: 0;
   
   &:hover {
     opacity: 0.8;
@@ -479,6 +494,7 @@ export const InterpretationContent = styled.div<{ $isExpanded: boolean }>`
   overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.3s ease;
   opacity: ${(props) => (props.$isExpanded ? '1' : '0')};
+  padding-top: ${(props) => (props.$isExpanded ? '12px' : '0')};
   
   ${InterpretationTitle} {
     margin-top: 16px;

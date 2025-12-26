@@ -293,6 +293,19 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
 
   const isExpanded = (sectionKey: string) => expandedSections.has(sectionKey)
 
+  const handleChartClick = () => {
+    // Toggle view mode to table to show aspects in a structured way
+    // Or you could show a modal/dialog with aspect details
+    setViewMode('table')
+    // Scroll to table if needed
+    setTimeout(() => {
+      const tableElement = document.querySelector('[data-table-view]')
+      if (tableElement) {
+        tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }, 100)
+  }
+
   const formatDate = () => {
     const monthName = monthNames[parseInt(chartData.month) - 1] || ''
     return `${monthName} ${chartData.date}, ${chartData.year}`
@@ -323,7 +336,7 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
         </ToggleButtons>
 
         {viewMode === 'chart' ? (
-          <ChartWrapper>
+          <ChartWrapper onClick={handleChartClick}>
             {(apiChartData?.chartSvgUrl || apiChartData?.output) ? (
               <>
                 <img
@@ -333,6 +346,7 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
                     width: '100%',
                     height: '100%',
                     objectFit: 'contain',
+                    pointerEvents: 'none',
                   }}
                   onError={(e) => {
                     console.error('Failed to load chart image:', apiChartData.chartSvgUrl)
@@ -357,16 +371,16 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
               <>
                 <ChartPlaceholder>
                   <div style={{ textAlign: 'center', padding: '40px' }}>
-                    <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
+                    <p style={{ fontSize: '14px', color: '#b0b0b0', marginBottom: '20px' }}>
                       {apiChartData ? 'Loading chart...' : 'Birth Chart Visualization'}
                     </p>
-                    <p style={{ fontSize: '12px', color: '#999' }}>
+                    <p style={{ fontSize: '12px', color: '#888' }}>
                       {apiChartData 
                         ? 'Waiting for chart to generate...' 
                         : 'Chart visualization would appear here. In a production app, this would be generated using an astrology library or API.'}
                     </p>
                     {apiChartData && !apiChartData.chartSvgUrl && (
-                      <p style={{ fontSize: '11px', color: '#999', marginTop: '10px' }}>
+                      <p style={{ fontSize: '11px', color: '#888', marginTop: '10px' }}>
                         API Response: {JSON.stringify(apiChartData, null, 2)}
                       </p>
                     )}
@@ -386,7 +400,7 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
             )}
           </ChartWrapper>
         ) : (
-          <TableWrapper>
+          <TableWrapper data-table-view>
             <Table>
               <TableHeader>
                 <TableHeaderRow>
