@@ -95,6 +95,7 @@ export const ChartWrapper = styled.div`
   @media (max-width: 767px) {
     min-height: 400px;
     aspect-ratio: auto;
+    padding-bottom: 80px;
   }
 `
 
@@ -201,6 +202,18 @@ export const ChartInstructions = styled.div`
   gap: 8px;
   pointer-events: none;
   z-index: 5;
+  width: 90%;
+  max-width: 280px;
+  
+  @media (max-width: 767px) {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    margin-top: 20px;
+    width: 100%;
+    max-width: 100%;
+  }
   
   p {
     font-family: 'gt-america', sans-serif;

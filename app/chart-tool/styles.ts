@@ -195,9 +195,50 @@ export const CheckboxWrapper = styled.div`
 export const Checkbox = styled.input`
   width: 20px;
   height: 20px;
+  min-width: 20px;
+  min-height: 20px;
   margin-top: 2px;
   cursor: pointer;
-  accent-color: #f5f5f5;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: #1a1a1a;
+  border: 2px solid #666;
+  border-radius: 4px;
+  position: relative;
+  flex-shrink: 0;
+  
+  &:checked {
+    background-color: #f5f5f5;
+    border-color: #f5f5f5;
+  }
+  
+  &:checked::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 0px;
+    width: 5px;
+    height: 10px;
+    border: solid #0f0f0f;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  
+  @media (max-width: 767px) {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    
+    &:checked::after {
+      left: 4px;
+      top: 1px;
+      width: 6px;
+      height: 11px;
+      border-width: 0 2.5px 2.5px 0;
+    }
+  }
 `
 
 export const CheckboxLabel = styled.label`
