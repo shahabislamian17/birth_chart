@@ -406,7 +406,11 @@ export const SectionTitle = styled.h5`
 `
 
 export const PlacementItem = styled.div`
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 20px;
   
   &:last-child {
     margin-bottom: 0;
@@ -417,7 +421,7 @@ export const PlacementHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 `
 
 export const PlacementIcon = styled.img`
@@ -437,20 +441,21 @@ export const PlacementDesc = styled.p`
   font-family: 'gt-america', sans-serif;
   font-size: 0.875rem;
   color: #b0b0b0;
-  margin: 8px 0;
+  margin: 0 0 8px 0;
+  line-height: 1.5;
 `
 
 export const PlacementDetail = styled.p`
   font-family: 'gt-america', sans-serif;
   font-size: 0.875rem;
   color: #888;
-  margin: 4px 0 0;
+  margin: 0;
   line-height: 1.6;
 `
 
 export const InterpretationSection = styled.div`
-  margin-top: 24px;
-  padding-top: 24px;
+  margin-top: 16px;
+  padding-top: 16px;
   border-top: 1px solid #333;
 `
 
@@ -459,10 +464,9 @@ export const InterpretationToggle = styled.button`
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 12px 0;
+  padding: 0;
   background: none;
   border: none;
-  border-bottom: 1px solid #333;
   cursor: pointer;
   font-family: 'gt-america', sans-serif;
   text-align: left;
