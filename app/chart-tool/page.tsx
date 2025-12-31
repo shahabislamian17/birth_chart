@@ -90,141 +90,64 @@ export default function ChartToolPage() {
   }
 
   /**
-   * Function to submit data to Elementor form
-   * 
-   * HOW TO CUSTOMIZE FOR YOUR ELEMENTOR FORM:
-   * 1. In WordPress, go to your Elementor form widget
-   * 2. Click on the email field > Advanced tab > CSS ID
-   * 3. Note the ID (e.g., "chart_email")
-   * 4. The code will automatically try to find it
-   * 
-   * To add more fields (name, birth date, etc.):
-   * - Add similar logic for each field
-   * - Use the same pattern: find field, set value, trigger events
+   * Function to submit email to Elementor form (non-blocking, won't redirect page)
+   * Simply finds element by ID="chart_email" and submits via AJAX to prevent page navigation
    */
   const submitToElementorForm = (email: string) => {
-    let attempts = 0
-    const maxAttempts = 10 // Try for up to 5 seconds (10 * 500ms)
-    
-    const trySubmit = () => {
-      attempts++
+    // Run asynchronously so it doesn't block chart calculation
+    setTimeout(() => {
       try {
-        // Debug: Log all forms and email inputs on the page
-        if (attempts === 1) {
-          console.log('=== DEBUGGING ELEMENTOR FORM ===')
-          const allForms = document.querySelectorAll('form')
-          console.log(`Found ${allForms.length} form(s) on the page:`)
-          allForms.forEach((form, index) => {
-            console.log(`Form ${index + 1}:`, {
-              id: form.id,
-              className: form.className,
-              action: form.action,
-              method: form.method
-            })
-          })
-          
-          const allEmailInputs = document.querySelectorAll('input[type="email"], input[name*="email"], input[id*="email"]')
-          console.log(`Found ${allEmailInputs.length} email input(s) on the page:`)
-          allEmailInputs.forEach((input, index) => {
-            console.log(`Email input ${index + 1}:`, {
-              id: (input as HTMLInputElement).id,
-              name: (input as HTMLInputElement).name,
-              className: input.className,
-              value: (input as HTMLInputElement).value
-            })
-          })
-          
-          // Also check for the specific ID
-          const chartEmailElement = document.getElementById('chart_email')
-          console.log('Element with id="chart_email":', chartEmailElement)
-          console.log('================================')
+        // Simple: Just find by ID
+        const emailField = document.getElementById('chart_email') as HTMLInputElement
+        
+        if (!emailField) {
+          console.log('Elementor email field (id="chart_email") not found - skipping form submission')
+          return
         }
 
-        // Try multiple selectors to find the Elementor form email field
-        const emailSelectors = [
-          '#chart_email', // Your custom field ID (most reliable - try this first)
-          '#form-field-chart_email', // Elementor auto-generated format
-          'input[id="chart_email"]', // Alternative ID selector
-          'input[id*="chart_email"]', // Partial ID match
-          'input[name="chart_email"]', // Try name attribute
-          'input[name*="chart_email"]', // Partial name match
-          'input[type="email"]', // Generic email input
-          'input[name*="email"]', // Input with email in name
-          '.elementor-field-group-email input', // Elementor field group
-          'input.elementor-field-email', // Elementor field class
-          'form.elementor-form input[type="email"]', // Email in Elementor form
-        ]
+        // If ID is on a wrapper div, find the input inside
+        const inputField = emailField.tagName === 'INPUT' 
+          ? emailField 
+          : emailField.querySelector('input[type="email"], input') as HTMLInputElement
 
-        let emailField: HTMLInputElement | null = null
-
-        // Try to find the email field
-        for (const selector of emailSelectors) {
-          try {
-            const field = document.querySelector(selector) as HTMLInputElement
-            if (field) {
-              // Check if it's actually an input field or if the ID is on a wrapper
-              if (field.tagName === 'INPUT' && (field.type === 'email' || selector.includes('chart_email'))) {
-                emailField = field
-                console.log(`✓ Found email field using selector: ${selector}`)
-                break
-              } else if (field.tagName !== 'INPUT' && selector.includes('chart_email')) {
-                // If the ID is on a wrapper, find the input inside
-                const inputInside = field.querySelector('input[type="email"], input') as HTMLInputElement
-                if (inputInside) {
-                  emailField = inputInside
-                  console.log(`✓ Found email field inside wrapper using selector: ${selector}`)
-                  break
-                }
-              }
-            }
-          } catch (e) {
-            // Invalid selector, continue
-          }
+        if (!inputField) {
+          console.log('Email input not found inside element with id="chart_email"')
+          return
         }
 
-        if (emailField) {
-          // Fill in the email
-          emailField.value = email
+        // Fill in the email
+        inputField.value = email
+        
+        // Trigger events so Elementor recognizes the change
+        inputField.dispatchEvent(new Event('input', { bubbles: true }))
+        inputField.dispatchEvent(new Event('change', { bubbles: true }))
+
+        // Find the form
+        const form = inputField.closest('form') as HTMLFormElement
+
+        if (form) {
+          // Submit via AJAX to prevent page redirect
+          const formData = new FormData(form)
           
-          // Trigger input event to ensure Elementor recognizes the change
-          emailField.dispatchEvent(new Event('input', { bubbles: true }))
-          emailField.dispatchEvent(new Event('change', { bubbles: true }))
-          emailField.dispatchEvent(new Event('blur', { bubbles: true }))
-
-          // Find and submit the Elementor form
-          const form = emailField.closest('form') || 
-                      document.querySelector('.elementor-form') ||
-                      document.querySelector('form.elementor-form') ||
-                      document.querySelector('form[class*="elementor"]')
-
-          if (form) {
-            // Submit the form
-            ;(form as HTMLFormElement).submit()
-            console.log('✓ Elementor form submitted successfully with email:', email)
-            return true // Success, stop retrying
-          } else {
-            console.warn('⚠ Elementor form not found, but email field was filled')
-          }
-        } else if (attempts < maxAttempts) {
-          // Retry after 500ms
-          setTimeout(trySubmit, 500)
+          fetch(form.action || window.location.href, {
+            method: form.method || 'POST',
+            body: formData,
+            credentials: 'same-origin',
+          })
+            .then(() => {
+              console.log('✓ Elementor form submitted successfully (no page redirect)')
+            })
+            .catch((error) => {
+              console.warn('Elementor form submission error (non-critical):', error)
+            })
         } else {
-          console.error('❌ Elementor email field not found after', maxAttempts, 'attempts.')
-          console.log('💡 TIP: Make sure:')
-          console.log('   1. The Elementor form is on the same page')
-          console.log('   2. The email field has ID="chart_email" in Elementor')
-          console.log('   3. The form has loaded (check if Elementor loads forms via AJAX)')
+          console.log('Elementor form not found - email field was filled but form not submitted')
         }
       } catch (error) {
-        console.error('Error submitting to Elementor form:', error)
-        if (attempts < maxAttempts) {
-          setTimeout(trySubmit, 500)
-        }
+        // Silently fail - don't disturb chart calculation
+        console.log('Elementor form submission skipped:', error)
       }
-    }
-    
-    // Start trying immediately, then retry if needed
-    trySubmit()
+    }, 1000) // Wait 1 second after chart calculation starts
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
