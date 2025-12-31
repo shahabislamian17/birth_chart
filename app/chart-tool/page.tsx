@@ -91,39 +91,30 @@ export default function ChartToolPage() {
 
   /**
    * Function to submit email to Elementor form (non-blocking, won't redirect page)
-   * Simply finds element by ID="chart_email" and submits via AJAX to prevent page navigation
+   * Uses Elementor's form field format: #form-field-{field_id}
    */
   const submitToElementorForm = (email: string) => {
     // Run asynchronously so it doesn't block chart calculation
     setTimeout(() => {
       try {
-        // Simple: Just find by ID
-        const emailField = document.getElementById('chart_email') as HTMLInputElement
+
+        // Elementor form field format: #form-field-{field_id}
+        const emailField = document.querySelector('#form-field-chart_email') as HTMLInputElement
         
         if (!emailField) {
-          console.log('Elementor email field (id="chart_email") not found - skipping form submission')
-          return
-        }
-
-        // If ID is on a wrapper div, find the input inside
-        const inputField = emailField.tagName === 'INPUT' 
-          ? emailField 
-          : emailField.querySelector('input[type="email"], input') as HTMLInputElement
-
-        if (!inputField) {
-          console.log('Email input not found inside element with id="chart_email"')
+          console.log('Elementor email field (#form-field-chart_email) not found - skipping form submission')
           return
         }
 
         // Fill in the email
-        inputField.value = email
+        emailField.value = email
         
         // Trigger events so Elementor recognizes the change
-        inputField.dispatchEvent(new Event('input', { bubbles: true }))
-        inputField.dispatchEvent(new Event('change', { bubbles: true }))
+        emailField.dispatchEvent(new Event('input', { bubbles: true }))
+        emailField.dispatchEvent(new Event('change', { bubbles: true }))
 
-        // Find the form
-        const form = inputField.closest('form') as HTMLFormElement
+        // Find the Elementor form
+        const form = document.querySelector('.elementor-form') as HTMLFormElement
 
         if (form) {
           // Submit via AJAX to prevent page redirect
@@ -141,7 +132,7 @@ export default function ChartToolPage() {
               console.warn('Elementor form submission error (non-critical):', error)
             })
         } else {
-          console.log('Elementor form not found - email field was filled but form not submitted')
+          console.log('Elementor form (.elementor-form) not found - email field was filled but form not submitted')
         }
       } catch (error) {
         // Silently fail - don't disturb chart calculation
