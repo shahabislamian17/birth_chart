@@ -89,58 +89,6 @@ export default function ChartToolPage() {
     }))
   }
 
-  /**
-   * Function to submit email to Elementor form (non-blocking, won't redirect page)
-   * Uses Elementor's form field format: #form-field-{field_id}
-   */
-  const submitToElementorForm = (email: string) => {
-    // Run asynchronously so it doesn't block chart calculation
-    setTimeout(() => {
-      try {
-
-        // Elementor form field format: #form-field-{field_id}
-        const emailField = document.querySelector('#form-field-chart_email') as HTMLInputElement
-        
-        if (!emailField) {
-          console.log('Elementor email field (#form-field-chart_email) not found - skipping form submission')
-          return
-        }
-
-        // Fill in the email
-        emailField.value = email
-        
-        // Trigger events so Elementor recognizes the change
-        emailField.dispatchEvent(new Event('input', { bubbles: true }))
-        emailField.dispatchEvent(new Event('change', { bubbles: true }))
-
-        // Find the Elementor form
-        const form = document.querySelector('.elementor-form') as HTMLFormElement
-
-        if (form) {
-          // Submit via AJAX to prevent page redirect
-          const formData = new FormData(form)
-          
-          fetch(form.action || window.location.href, {
-            method: form.method || 'POST',
-            body: formData,
-            credentials: 'same-origin',
-          })
-            .then(() => {
-              console.log('✓ Elementor form submitted successfully (no page redirect)')
-            })
-            .catch((error) => {
-              console.warn('Elementor form submission error (non-critical):', error)
-            })
-        } else {
-          console.log('Elementor form (.elementor-form) not found - email field was filled but form not submitted')
-        }
-      } catch (error) {
-        // Silently fail - don't disturb chart calculation
-        console.log('Elementor form submission skipped:', error)
-      }
-    }, 1000) // Wait 1 second after chart calculation starts
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -172,9 +120,16 @@ export default function ChartToolPage() {
         setChartData(result.data)
         
         // Submit email to Elementor form if email is provided
-        if (formData.email) {
-          submitToElementorForm(formData.email)
+        if (formData.email && typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('birthChartEmailReady', {
+              detail: {
+                email: formData.email,
+              },
+            })
+          )
         }
+        
         
         setShowResult(true)
       } else {
@@ -188,9 +143,16 @@ export default function ChartToolPage() {
         }
         
         // Still submit to Elementor form even if chart API fails
-        if (formData.email) {
-          submitToElementorForm(formData.email)
+        if (formData.email && typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('birthChartEmailReady', {
+              detail: {
+                email: formData.email,
+              },
+            })
+          )
         }
+        
         
         setShowResult(true)
       }
