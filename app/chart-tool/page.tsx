@@ -113,7 +113,8 @@ export default function ChartToolPage() {
         // Elementor forms typically use IDs like: form-field-{field_id}
         // ADD YOUR SPECIFIC FIELD ID HERE if the auto-detection doesn't work:
         const emailSelectors = [
-          '#form-field-chart_email', // ADD YOUR CUSTOM FIELD ID HERE (most reliable)
+          '#chart_email', // Your custom field ID (most reliable - try this first)
+          '#form-field-chart_email', // Elementor auto-generated format (fallback)
           'input[type="email"]', // Generic email input (fallback)
           'input[name*="email"]', // Input with email in name
           '.elementor-field-group-email input', // Elementor field group
@@ -123,10 +124,13 @@ export default function ChartToolPage() {
         let emailField: HTMLInputElement | null = null
 
         // Try to find the email field
+        console.log('Looking for Elementor email field...')
         for (const selector of emailSelectors) {
           const field = document.querySelector(selector) as HTMLInputElement
-          if (field && field.type === 'email') {
+          console.log(`Trying selector: ${selector}`, field ? '✓ Found' : '✗ Not found')
+          if (field && (field.type === 'email' || selector.includes('chart_email'))) {
             emailField = field
+            console.log(`✓ Successfully found email field using selector: ${selector}`)
             break
           }
         }
