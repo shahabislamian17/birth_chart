@@ -119,17 +119,21 @@ export default function ChartToolPage() {
         console.log('Setting chart data:', result.data)
         setChartData(result.data)
         
-        // Submit email to Elementor form if email is provided
+        // Send email to parent window (WordPress) via postMessage for Elementor form
         if (formData.email && typeof window !== 'undefined') {
-          window.dispatchEvent(
-            new CustomEvent('birthChartEmailReady', {
-              detail: {
+          try {
+            window.parent.postMessage(
+              {
+                type: 'BIRTH_CHART_EMAIL',
                 email: formData.email,
               },
-            })
-          )
+              '*' // In production, replace with your WordPress domain for security
+            )
+            console.log('📤 Email sent to parent window:', formData.email)
+          } catch (error) {
+            console.log('Could not send email to parent window (may not be in iframe):', error)
+          }
         }
-        
         
         setShowResult(true)
       } else {
@@ -142,17 +146,21 @@ export default function ChartToolPage() {
           setChartData(null)
         }
         
-        // Still submit to Elementor form even if chart API fails
+        // Still send email to parent window even if chart API fails
         if (formData.email && typeof window !== 'undefined') {
-          window.dispatchEvent(
-            new CustomEvent('birthChartEmailReady', {
-              detail: {
+          try {
+            window.parent.postMessage(
+              {
+                type: 'BIRTH_CHART_EMAIL',
                 email: formData.email,
               },
-            })
-          )
+              '*' // In production, replace with your WordPress domain for security
+            )
+            console.log('📤 Email sent to parent window:', formData.email)
+          } catch (error) {
+            console.log('Could not send email to parent window (may not be in iframe):', error)
+          }
         }
-        
         
         setShowResult(true)
       }
