@@ -112,11 +112,9 @@ export default function ChartToolPage() {
       })
 
       const result = await response.json()
-      console.log('API response:', result)
       
       if (result.success && result.data) {
         // Store the chart data
-        console.log('Setting chart data:', result.data)
         setChartData(result.data)
         
         // Send email to parent window (WordPress) via postMessage for Elementor form
@@ -129,16 +127,14 @@ export default function ChartToolPage() {
               },
               '*' // In production, replace with your WordPress domain for security
             )
-            console.log('📤 Email sent to parent window:', formData.email)
           } catch (error) {
-            console.log('Could not send email to parent window (may not be in iframe):', error)
+            // Silently handle iframe communication errors
           }
         }
         
         setShowResult(true)
       } else {
         // If API fails, still show result with sample data
-        console.warn('API call failed, using sample data:', result.message || result.error)
         // Still pass the result data even if success is false, in case there's useful info
         if (result.data) {
           setChartData(result.data)
@@ -156,16 +152,14 @@ export default function ChartToolPage() {
               },
               '*' // In production, replace with your WordPress domain for security
             )
-            console.log('📤 Email sent to parent window:', formData.email)
           } catch (error) {
-            console.log('Could not send email to parent window (may not be in iframe):', error)
+            // Silently handle iframe communication errors
           }
         }
         
         setShowResult(true)
       }
     } catch (error) {
-      console.error('Error calculating chart:', error)
       // Still show result with sample data on error
       setShowResult(true)
     } finally {
