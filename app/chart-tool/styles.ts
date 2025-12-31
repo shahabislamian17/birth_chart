@@ -146,6 +146,8 @@ export const Select = styled.select`
 
 export const BirthInfoSection = styled.div`
   margin-bottom: 32px;
+  position: relative;
+  z-index: 2;
   
   h5 {
     font-family: 'gt-america', sans-serif;
@@ -292,8 +294,10 @@ export const InfoText = styled.p`
   font-family: 'gt-america', sans-serif;
   font-size: 0.875rem;
   line-height: 1.6;
-  color: #b0b0b0;
+  color: #f5f5f5;
   margin-top: 8px;
+  position: relative;
+  z-index: 2;
   
   &.centered {
     text-align: center;
@@ -308,6 +312,8 @@ export const Link = styled.a`
   color: #f5f5f5;
   text-decoration: underline;
   text-underline-offset: 2px;
+  position: relative;
+  z-index: 2;
   
   &:hover {
     text-decoration: none;
@@ -350,6 +356,11 @@ export const ButterflyImage = styled.img`
   width: 259px;
   height: 264px;
   object-fit: contain;
+  opacity: 0.7;
+  
+  @media (max-width: 1200px) {
+    display: none;
+  }
 `
 
 export const StarImage = styled.img`

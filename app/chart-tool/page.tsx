@@ -89,6 +89,77 @@ export default function ChartToolPage() {
     }))
   }
 
+  /**
+   * Function to submit data to Elementor form
+   * 
+   * HOW TO CUSTOMIZE FOR YOUR ELEMENTOR FORM:
+   * 1. In WordPress, go to your Elementor form widget
+   * 2. Click on the email field > Advanced tab > CSS ID
+   * 3. Note the ID (e.g., "form-field-chart_email")
+   * 4. Add that specific selector to the emailSelectors array below
+   * 
+   * Example: If your field ID is "form-field-chart_email", add:
+   * '#form-field-chart_email'
+   * 
+   * To add more fields (name, birth date, etc.):
+   * - Add similar logic for each field
+   * - Use the same pattern: find field, set value, trigger events
+   */
+  const submitToElementorForm = (email: string) => {
+    // Wait a bit for Elementor form to be ready (in case it loads asynchronously)
+    setTimeout(() => {
+      try {
+        // Try multiple selectors to find the Elementor form email field
+        // Elementor forms typically use IDs like: form-field-{field_id}
+        // ADD YOUR SPECIFIC FIELD ID HERE if the auto-detection doesn't work:
+        const emailSelectors = [
+          '#form-field-chart_email', // ADD YOUR CUSTOM FIELD ID HERE (most reliable)
+          'input[type="email"]', // Generic email input (fallback)
+          'input[name*="email"]', // Input with email in name
+          '.elementor-field-group-email input', // Elementor field group
+          'input.elementor-field-email', // Elementor field class
+        ]
+
+        let emailField: HTMLInputElement | null = null
+
+        // Try to find the email field
+        for (const selector of emailSelectors) {
+          const field = document.querySelector(selector) as HTMLInputElement
+          if (field && field.type === 'email') {
+            emailField = field
+            break
+          }
+        }
+
+        if (emailField) {
+          // Fill in the email
+          emailField.value = email
+          
+          // Trigger input event to ensure Elementor recognizes the change
+          emailField.dispatchEvent(new Event('input', { bubbles: true }))
+          emailField.dispatchEvent(new Event('change', { bubbles: true }))
+
+          // Find and submit the Elementor form
+          const form = emailField.closest('form') || 
+                      document.querySelector('.elementor-form') ||
+                      document.querySelector('form.elementor-form')
+
+          if (form) {
+            // Submit the form
+            ;(form as HTMLFormElement).submit()
+            console.log('Elementor form submitted successfully with email:', email)
+          } else {
+            console.warn('Elementor form not found, but email field was filled')
+          }
+        } else {
+          console.warn('Elementor email field not found. Make sure the form is on the page.')
+        }
+      } catch (error) {
+        console.error('Error submitting to Elementor form:', error)
+      }
+    }, 500) // Wait 500ms for Elementor form to be ready
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -118,6 +189,12 @@ export default function ChartToolPage() {
         // Store the chart data
         console.log('Setting chart data:', result.data)
         setChartData(result.data)
+        
+        // Submit email to Elementor form if email is provided
+        if (formData.email) {
+          submitToElementorForm(formData.email)
+        }
+        
         setShowResult(true)
       } else {
         // If API fails, still show result with sample data
@@ -128,6 +205,12 @@ export default function ChartToolPage() {
         } else {
           setChartData(null)
         }
+        
+        // Still submit to Elementor form even if chart API fails
+        if (formData.email) {
+          submitToElementorForm(formData.email)
+        }
+        
         setShowResult(true)
       }
     } catch (error) {
