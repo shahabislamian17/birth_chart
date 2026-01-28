@@ -19,6 +19,25 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="stylesheet" href="https://use.typekit.net/umw2scb.css" />
+        {/* Preload critical decorative images for faster loading */}
+        <link
+          rel="preload"
+          as="image"
+          href="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/enter-butterfly.png"
+          fetchPriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-1.png"
+          fetchPriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-5.png"
+          fetchPriority="high"
+        />
       </head>
       <body className={inter.className}>{children}</body>
     </html>
