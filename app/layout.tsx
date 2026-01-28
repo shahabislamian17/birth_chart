@@ -23,19 +23,19 @@ export default function RootLayout({
         <link
           rel="preload"
           as="image"
-          href="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/enter-butterfly.png"
+          href="/stickers/enter-butterfly.png"
           fetchPriority="high"
         />
         <link
           rel="preload"
           as="image"
-          href="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-1.png"
+          href="/stickers/star-1.png"
           fetchPriority="high"
         />
         <link
           rel="preload"
           as="image"
-          href="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-5.png"
+          href="/stickers/star-5.png"
           fetchPriority="high"
         />
       </head>

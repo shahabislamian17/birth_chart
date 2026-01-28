@@ -426,7 +426,7 @@ export default function ChartToolPage() {
 
           <DecorativeContainer>
             <ButterflyImage
-              src="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/enter-butterfly.png"
+              src="/stickers/enter-butterfly.png"
               alt=""
               width={259}
               height={264}
@@ -434,7 +434,7 @@ export default function ChartToolPage() {
               fetchPriority="high"
             />
             <StarImage
-              src="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-1.png"
+              src="/stickers/star-1.png"
               alt=""
               className="star-1"
               width={24}
@@ -443,7 +443,7 @@ export default function ChartToolPage() {
               fetchPriority="high"
             />
             <StarImage
-              src="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-5.png"
+              src="/stickers/star-5.png"
               alt=""
               className="star-5-upper"
               width={32}
@@ -452,7 +452,7 @@ export default function ChartToolPage() {
               fetchPriority="high"
             />
             <StarImage
-              src="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-5.png"
+              src="/stickers/star-5.png"
               alt=""
               className="star-5-lower"
               width={32}
@@ -460,7 +460,7 @@ export default function ChartToolPage() {
               loading="eager"
             />
             <StarImage
-              src="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-1.png"
+              src="/stickers/star-1.png"
               alt=""
               className="star-1"
               width={24}
@@ -468,7 +468,7 @@ export default function ChartToolPage() {
               loading="eager"
             />
             <StarImage
-              src="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-5.png"
+              src="/stickers/star-5.png"
               alt=""
               className="star-5"
               width={32}
@@ -479,7 +479,7 @@ export default function ChartToolPage() {
 
           <DecorativeContainer className="bottom-stars">
             <StarImage
-              src="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-1.png"
+              src="/stickers/star-1.png"
               alt=""
               className="star-1"
               width={24}
@@ -487,7 +487,7 @@ export default function ChartToolPage() {
               loading="lazy"
             />
             <StarImage
-              src="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-5.png"
+              src="/stickers/star-5.png"
               alt=""
               className="star-5-upper"
               width={32}
@@ -495,7 +495,7 @@ export default function ChartToolPage() {
               loading="lazy"
             />
             <StarImage
-              src="https://production-chani-web-f5e5589aaeda.herokuapp.com/stickers/star-5.png"
+              src="/stickers/star-5.png"
               alt=""
               className="star-5-lower"
               width={32}
