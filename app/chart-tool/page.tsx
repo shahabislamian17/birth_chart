@@ -55,27 +55,40 @@ export default function ChartToolPage() {
 
   const locationInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<any>(null)
+  const [mapsLoaded, setMapsLoaded] = useState(false)
+
+  const initializeAutocomplete = () => {
+    if (typeof window !== 'undefined' && window.google && locationInputRef.current && !autocompleteRef.current) {
+      try {
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(
+          locationInputRef.current,
+          {
+            types: ['(cities)'],
+          }
+        )
+
+        autocompleteRef.current.addListener('place_changed', () => {
+          const place = autocompleteRef.current.getPlace()
+          if (place.formatted_address) {
+            setFormData((prev) => ({
+              ...prev,
+              location: place.formatted_address,
+            }))
+          }
+        })
+      } catch (error) {
+        console.error('Error initializing autocomplete:', error)
+      }
+    }
+  }
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.google && locationInputRef.current && !autocompleteRef.current) {
-      autocompleteRef.current = new window.google.maps.places.Autocomplete(
-        locationInputRef.current,
-        {
-          types: ['(cities)'],
-        }
-      )
-
-      autocompleteRef.current.addListener('place_changed', () => {
-        const place = autocompleteRef.current.getPlace()
-        if (place.formatted_address) {
-          setFormData((prev) => ({
-            ...prev,
-            location: place.formatted_address,
-          }))
-        }
-      })
+    if (mapsLoaded && typeof window !== 'undefined') {
+      // Use setTimeout to ensure the script is fully loaded
+      const timer = setTimeout(initializeAutocomplete, 100)
+      return () => clearTimeout(timer)
     }
-  }, [])
+  }, [mapsLoaded])
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -171,56 +184,23 @@ export default function ChartToolPage() {
     setShowResult(false)
   }
 
-  // Show result page if form is submitted
-  if (showResult) {
-    return (
-      <ResultPage
-        chartData={{
-          name: formData.name,
-          date: formData.date,
-          time: `${formData.hour}:${formData.minute} ${formData.ampm}`,
-          location: formData.location,
-          month: formData.month,
-          year: formData.year,
-          hour: formData.hour,
-          minute: formData.minute,
-          ampm: formData.ampm,
-        }}
-        apiChartData={chartData}
-        onEdit={handleEdit}
-      />
-    )
-  }
-
+  // Always render both - use CSS to hide/show
   return (
     <>
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&loading=async`}
-        strategy="lazyOnload"
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        strategy="afterInteractive"
+        onReady={() => {
+          setMapsLoaded(true)
+        }}
         onLoad={() => {
-          if (typeof window !== 'undefined' && window.google && locationInputRef.current && !autocompleteRef.current) {
-            autocompleteRef.current = new window.google.maps.places.Autocomplete(
-              locationInputRef.current,
-              {
-                types: ['(cities)'],
-              }
-            )
-
-            autocompleteRef.current.addListener('place_changed', () => {
-              const place = autocompleteRef.current.getPlace()
-              if (place.formatted_address) {
-                setFormData((prev) => ({
-                  ...prev,
-                  location: place.formatted_address,
-                }))
-              }
-            })
-          }
+          setMapsLoaded(true)
         }}
       />
-      <Container>
-        <FormContainer>
-          <form onSubmit={handleSubmit}>
+      <>
+        <Container style={{ display: showResult ? 'none' : 'block' }}>
+          <FormContainer>
+            <form onSubmit={handleSubmit}>
             <div>
               <Title>Birth Chart</Title>
               <Subtitle>
@@ -505,6 +485,25 @@ export default function ChartToolPage() {
           </DecorativeContainer>
         </FormContainer>
       </Container>
+
+      <div style={{ display: showResult ? 'block' : 'none' }}>
+        <ResultPage
+          chartData={{
+            name: formData.name,
+            date: formData.date,
+            time: `${formData.hour}:${formData.minute} ${formData.ampm}`,
+            location: formData.location,
+            month: formData.month,
+            year: formData.year,
+            hour: formData.hour,
+            minute: formData.minute,
+            ampm: formData.ampm,
+          }}
+          apiChartData={chartData}
+          onEdit={handleEdit}
+        />
+      </div>
+      </>
     </>
   )
 }

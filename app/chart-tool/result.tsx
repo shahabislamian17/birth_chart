@@ -1,57 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  ResultContainer,
-  ChartSection,
-  ToggleButtons,
-  ToggleButton,
-  ChartWrapper,
-  ChartPlaceholder,
-  ChartInstructions,
-  WandIcon,
-  TableWrapper,
-  Table,
-  TableHeader,
-  TableHeaderRow,
-  TableHeaderCell,
-  TableBody,
-  TableRow,
-  TableCell,
-  TableIcon,
-  ResultContent,
-  HeaderSection,
-  ChartTitle,
-  InfoSection,
-  InfoRow,
-  InfoLabel,
-  InfoValue,
-  EditButton,
-  Divider,
-  AppSection,
-  AppContent,
-  AppLogo,
-  AppText,
-  AppButtons,
-  AppButton,
-  AppButtonText,
-  AppButtonIcon,
-  Section,
-  SectionTitle,
-  PlacementItem,
-  PlacementHeader,
-  PlacementIcon,
-  PlacementInfo,
-  PlacementDesc,
-  PlacementDetail,
-  InterpretationSection,
-  InterpretationToggle,
-  InterpretationTitle,
-  InterpretationContent,
-  InterpretationText,
-  ChevronIcon,
-} from './result-styles'
-import { generateInterpretation } from './interpretations'
+import { useState, useEffect } from 'react'
+import styled from 'styled-components'
+import TwoDiagramView from './two-diagram-view'
+import NebulaMatrix from './nebula-matrix'
 
 interface ChartData {
   name: string
@@ -65,577 +17,569 @@ interface ChartData {
   ampm: string
 }
 
+interface Constellation {
+  id: string
+  name: string
+  symbol: string
+  emoji: string
+}
+
+interface DiagramPlacement {
+  id: string
+  constellationId: string
+  position: { x: number; y: number }
+  zIndex: number
+  scale: number
+  rotation: number
+}
+
+interface DesiredDiagram {
+  id: string
+  placements: DiagramPlacement[]
+  expiresAt: Date
+  isLocked: boolean
+  status: 'active' | 'expired' | 'locked'
+}
+
 interface ResultPageProps {
   chartData: ChartData
   apiChartData?: any
   onEdit: () => void
 }
 
-// Sample chart data - in a real app, this would come from an astrology API
-const sampleChartData = {
-  keys: [
-    {
-      icon: '/glyphs/placements/ac.png',
-      name: 'Rising',
-      sign: 'Taurus',
-      degree: '12°',
-      house: '1st House',
-      desc: 'Your motivation for living life',
-      detail: 'Ascendent in Taurus in the 1st House of self, appearance, vitality, and life force',
-    },
-    {
-      icon: '/glyphs/placements/sun.png',
-      name: 'Sun',
-      sign: 'Capricorn',
-      degree: '25°',
-      house: '9th House',
-      desc: 'Your identity and where you shine',
-      detail: 'Sun in Capricorn in the 9th House of travel, education, publishing, religion, astrology, and philosophy',
-    },
-    {
-      icon: '/glyphs/placements/moon.png',
-      name: 'Moon',
-      sign: 'Virgo',
-      degree: '20°',
-      house: '5th House',
-      desc: 'Your body and emotions',
-      detail: 'Moon in Virgo in the 5th House of pleasure, romance, creative energy, and children',
-    },
-  ],
-  planets: [
-    {
-      icon: '/glyphs/placements/mercury.png',
-      name: 'Mercury',
-      sign: 'Capricorn',
-      degree: '11°',
-      house: '9th House',
-      desc: 'How and where you communicate',
-      detail: 'Mercury in Capricorn in the 9th House of travel, education, publishing, religion, astrology, and philosophy',
-    },
-    {
-      icon: '/glyphs/placements/venus.png',
-      name: 'Venus',
-      sign: 'Aquarius',
-      degree: '0°',
-      house: '10th House',
-      desc: 'How and where you connect',
-      detail: 'Venus in Aquarius in the 10th House of career and public roles',
-    },
-    {
-      icon: '/glyphs/placements/mars.png',
-      name: 'Mars',
-      sign: 'Sagittarius',
-      degree: '20°',
-      house: '8th House',
-      desc: 'How and where you take action',
-      detail: "Mars in Sagittarius in the 8th House of death, mental health, and other people's resources",
-    },
-    {
-      icon: '/glyphs/placements/jupiter.png',
-      name: 'Jupiter',
-      sign: 'Cancer',
-      degree: '3°',
-      house: '3rd House',
-      desc: 'How and where you create abundance',
-      detail: 'Jupiter in Cancer in the 3rd House of communication, daily rituals, siblings, and extended family',
-    },
-    {
-      icon: '/glyphs/placements/saturn.png',
-      name: 'Saturn',
-      sign: 'Capricorn',
-      degree: '17°',
-      house: '9th House',
-      desc: 'How and where you create boundaries',
-      detail: 'Saturn in Capricorn in the 9th House of travel, education, publishing, religion, astrology, and philosophy',
-    },
-    {
-      icon: '/glyphs/placements/uranus.png',
-      name: 'Uranus',
-      sign: 'Capricorn',
-      degree: '6°',
-      house: '9th House',
-      desc: 'How and where you innovate and disrupt',
-      detail: 'Uranus in Capricorn in the 9th House of travel, education, publishing, religion, astrology, and philosophy',
-    },
-    {
-      icon: '/glyphs/placements/neptune.png',
-      name: 'Neptune',
-      sign: 'Capricorn',
-      degree: '12°',
-      house: '9th House',
-      desc: 'How and where you use your imagination',
-      detail: 'Neptune in Capricorn in the 9th House of travel, education, publishing, religion, astrology, and philosophy',
-    },
-    {
-      icon: '/glyphs/placements/pluto.png',
-      name: 'Pluto',
-      sign: 'Scorpio',
-      degree: '17°',
-      house: '7th House',
-      desc: 'How and where you hold secret power',
-      detail: 'Pluto in Scorpio in the 7th House of committed partnerships',
-    },
-  ],
-  angles: [
-    {
-      icon: '/glyphs/placements/dc.png',
-      name: 'DC',
-      sign: 'Scorpio',
-      degree: '12°',
-      house: '7th House',
-      desc: 'Your committed relationships',
-      detail: 'DC in Scorpio in the 7th House of committed partnerships',
-    },
-    {
-      icon: '/glyphs/placements/mc.png',
-      name: 'MC',
-      sign: 'Capricorn',
-      degree: '23°',
-      house: '9th House',
-      desc: 'Your public image and vocation',
-      detail: 'MC in Capricorn in the 9th House of travel, education, publishing, religion, astrology, and philosophy',
-    },
-    {
-      icon: '/glyphs/placements/ic.png',
-      name: 'IC',
-      sign: 'Cancer',
-      degree: '23°',
-      house: '3rd House',
-      desc: 'Your ancestry and home',
-      detail: 'IC in Cancer in the 3rd House of communication, daily rituals, siblings, and extended family',
-    },
-  ],
-  points: [
-    {
-      icon: '/glyphs/placements/northnode.png',
-      name: 'North Node',
-      sign: 'Aquarius',
-      degree: '16°',
-      house: '10th House',
-      desc: "How and where you're insatiable",
-      detail: 'North Node in Aquarius in the 10th House of career and public roles',
-    },
-    {
-      icon: '/glyphs/placements/southnode.png',
-      name: 'South Node',
-      sign: 'Leo',
-      degree: '16°',
-      house: '4th House',
-      desc: 'How and where you learn to let go',
-      detail: 'South Node in Leo in the 4th House of parents, caregivers, foundations, and home',
-    },
-    {
-      icon: '/glyphs/placements/lillith.png',
-      name: 'Black Moon Lilith',
-      sign: 'Scorpio',
-      degree: '14°',
-      house: '7th House',
-      desc: "How and where you're defiant",
-      detail: 'Black Moon Lilith in Scorpio in the 7th House of committed partnerships',
-    },
-    {
-      icon: '/glyphs/placements/chiron.png',
-      name: 'Chiron',
-      sign: 'Cancer',
-      degree: '12°',
-      house: '3rd House',
-      desc: 'How and where you find healing',
-      detail: 'Chiron in Cancer in the 3rd House of communication, daily rituals, siblings, and extended family',
-    },
-    {
-      icon: '/glyphs/placements/pallas-athena.png',
-      name: 'Pallas Athena',
-      sign: 'Aries',
-      degree: '5°',
-      house: '12th House',
-      desc: 'How and where you strategize',
-      detail: 'Pallas Athena in Aries in the 12th House of sorrow, loss, daemon, and hidden life',
-    },
-  ],
-}
+// Styled Components
+const ResultContainer = styled.div`
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    sans-serif;
+`
 
-const monthNames = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-]
+const Header = styled.div`
+  text-align: center;
+  margin-bottom: 40px;
+
+  h1 {
+    font-size: 32px;
+    margin: 0 0 10px 0;
+  }
+
+  p {
+    color: #666;
+    font-size: 16px;
+    margin: 0;
+  }
+`
+
+const Section = styled.div`
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+
+  h2 {
+    margin-top: 0;
+    color: #333;
+  }
+
+  p {
+    color: #555;
+    line-height: 1.5;
+  }
+`
+
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+`
+
+const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  ${(props) => {
+    switch (props.$variant) {
+      case 'danger':
+        return `
+          background: #ff6b6b;
+          color: white;
+          &:hover { background: #ff5252; }
+        `
+      case 'secondary':
+        return `
+          background: white;
+          color: #667eea;
+          border: 1.5px solid #667eea;
+          &:hover { background: #f0f4ff; }
+        `
+      default:
+        return `
+          background: #667eea;
+          color: white;
+          &:hover { background: #5568d3; }
+        `
+    }
+  }}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`
+
+const StatusBox = styled.div<{ $type: 'info' | 'success' | 'warning' | 'error' }>`
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid;
+  font-size: 14px;
+
+  ${(props) => {
+    switch (props.$type) {
+      case 'success':
+        return `
+          background: #d4edda;
+          border-color: #28a745;
+          color: #155724;
+        `
+      case 'warning':
+        return `
+          background: #fff3cd;
+          border-color: #ffc107;
+          color: #856404;
+        `
+      case 'error':
+        return `
+          background: #f8d7da;
+          border-color: #dc3545;
+          color: #721c24;
+        `
+      default:
+        return `
+          background: #d1ecf1;
+          border-color: #17a2b8;
+          color: #0c5460;
+        `
+    }
+  }}
+`
 
 export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPageProps) {
-  const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart')
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
-  
-  // Debug: Log the API chart data (remove in production)
-  if (process.env.NODE_ENV === 'development') {
-    console.log('ResultPage - apiChartData:', apiChartData)
-    console.log('ResultPage - chartSvgUrl:', apiChartData?.chartSvgUrl)
-  }
+  const [desiredDiagram, setDesiredDiagram] = useState<DesiredDiagram | null>(null)
+  const [collectedConstellations, setCollectedConstellations] = useState<Constellation[]>([])
+  const [showEditor, setShowEditor] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState<{ type: string; text: string } | null>(null)
+  const [debugStatus, setDebugStatus] = useState<string | null>(null)
+  const [isHydrated, setIsHydrated] = useState(false)
 
-  const toggleSection = (sectionKey: string) => {
-    setExpandedSections((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(sectionKey)) {
-        newSet.delete(sectionKey)
+  // Demo user ID based on chart location and name
+  const DEMO_USER_ID = 'chart_' + (chartData?.location || 'demo').replace(/[^a-z0-9]/gi, '_').toLowerCase()
+
+  // Ensure hydration completes before loading data
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (isHydrated) {
+      setDebugStatus('Starting load')
+      loadData()
+    }
+  }, [isHydrated])
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      // Load constellations
+      setDebugStatus('Loading collected constellations')
+      const collRes = await fetch(`/api/qr/scan?userId=${DEMO_USER_ID}`)
+      const collData = await collRes.json()
+      if (collData.success) {
+        setCollectedConstellations(collData.collected || [])
+      }
+
+      // Load diagram
+      setDebugStatus('Loading diagrams')
+      const diagRes = await fetch(`/api/diagrams?userId=${DEMO_USER_ID}`)
+      const diagData = await diagRes.json()
+
+      if (diagData.diagrams?.length > 0) {
+        const diag = diagData.diagrams[0]
+        setDesiredDiagram({
+          id: diag.id,
+          placements: diag.placements || [],
+          expiresAt: new Date(diag.expiresAt),
+          isLocked: diag.isLocked,
+          status: diag.status,
+        })
+        setDebugStatus('Diagram loaded')
       } else {
-        newSet.add(sectionKey)
+        setDebugStatus('No diagrams found — creating new')
+        await createDiagram()
       }
-      return newSet
-    })
+    } catch (err) {
+      console.error('Load error:', err)
+      setMessage({ type: 'error', text: 'Failed to load data' })
+      setDebugStatus(`Load error: ${String(err)}`)
+      await createDiagram()
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const isExpanded = (sectionKey: string) => expandedSections.has(sectionKey)
+  // Helper: create a simple inline SVG data URL as a fallback original chart
+  const generateFallbackSvgDataUrl = (data: any) => {
+    const name = data?.name || 'Unknown'
+    const date = data?.date || 'Unknown'
+    const time = data?.time || 'Unknown'
+    const location = data?.location || 'Unknown'
 
-  const handleChartClick = () => {
-    // Toggle view mode to table to show aspects in a structured way
-    // Or you could show a modal/dialog with aspect details
-    setViewMode('table')
-    // Scroll to table if needed
-    setTimeout(() => {
-      const tableElement = document.querySelector('[data-table-view]')
-      if (tableElement) {
-        tableElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'>\n  <rect width='100%' height='100%' fill='#fff'/>\n  <text x='50%' y='18%' dominant-baseline='middle' text-anchor='middle' font-size='22' fill='#111' font-family='Arial'>Original Birth Chart</text>\n  <text x='50%' y='30%' dominant-baseline='middle' text-anchor='middle' font-size='16' fill='#333' font-family='Arial'>${name}</text>\n  <text x='50%' y='40%' dominant-baseline='middle' text-anchor='middle' font-size='14' fill='#666' font-family='Arial'>${date} ${time}</text>\n  <text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='14' fill='#666' font-family='Arial'>${location}</text>\n  <g transform='translate(300,360)'>\n    <circle r='160' fill='none' stroke='#e6e6e6' stroke-width='2'/>\n    <text x='0' y='0' dominant-baseline='middle' text-anchor='middle' font-size='12' fill='#999'>Placeholder chart</text>\n  </g>\n</svg>`
+
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+  }
+
+  const createDiagram = async () => {
+    try {
+      setDebugStatus('Creating desired diagram')
+      const res = await fetch('/api/diagrams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          userId: DEMO_USER_ID,
+          originalChartId: 'chart_demo',
+        }),
+      })
+
+      // If response is not JSON (e.g., HTML error page), capture the text for debugging
+      const contentType = res.headers.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        const txt = await res.text()
+        console.error('Create returned non-JSON response:', res.status, txt)
+        setDebugStatus(`Create error: non-JSON response (status ${res.status})`)
+        return
       }
-    }, 100)
+
+      let data: any
+      try {
+        data = await res.json()
+      } catch (jsonErr) {
+        const txt = await res.text().catch(() => '<no body>')
+        console.error('Create JSON parse error:', jsonErr, 'body:', txt)
+        setDebugStatus(`Create error: SyntaxError parsing JSON`) 
+        return
+      }
+
+      if (data && data.success) {
+        setDesiredDiagram({
+          id: data.diagram.id,
+          placements: [],
+          expiresAt: new Date(data.diagram.expiresAt),
+          isLocked: false,
+          status: 'active',
+        })
+        setMessage({ type: 'success', text: '✨ Desired Diagram created!' })
+        setDebugStatus('Created new desired diagram')
+      } else {
+        console.error('Create API returned:', data)
+        setDebugStatus('Create failed: API returned no success')
+      }
+    } catch (err) {
+      console.error('Create error:', err)
+      setDebugStatus(`Create error: ${String(err)}`)
+    }
   }
 
-  const formatDate = () => {
-    const monthName = monthNames[parseInt(chartData.month) - 1] || ''
-    return `${monthName} ${chartData.date}, ${chartData.year}`
+  const scanQRCode = async (qrCode: string) => {
+    try {
+      const res = await fetch('/api/qr/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          qrCode,
+          userId: DEMO_USER_ID,
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        setMessage({
+          type: data.isNewConstellation ? 'success' : 'warning',
+          text: data.message,
+        })
+
+        // Reload collections
+        const collRes = await fetch(`/api/qr/scan?userId=${DEMO_USER_ID}`)
+        const collData = await collRes.json()
+        if (collData.success) {
+          setCollectedConstellations(collData.collected || [])
+        }
+      }
+    } catch (err) {
+      console.error('QR error:', err)
+      setMessage({ type: 'error', text: 'Failed to scan QR code' })
+    }
   }
 
-  const formatTime = () => {
-    return `${chartData.hour}:${chartData.minute.padStart(2, '0')} ${chartData.ampm.toLowerCase()}`
+  const saveDiagram = async (placements: DiagramPlacement[]) => {
+    if (!desiredDiagram) return
+
+    try {
+      const res = await fetch('/api/diagrams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update',
+          userId: DEMO_USER_ID,
+          diagramId: desiredDiagram.id,
+          placements,
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        setDesiredDiagram({
+          ...desiredDiagram,
+          placements: data.diagram.placements || placements,
+        })
+        setShowEditor(false)
+        setMessage({ type: 'success', text: '💾 Diagram saved!' })
+      }
+    } catch (err) {
+      console.error('Save error:', err)
+      setMessage({ type: 'error', text: 'Failed to save diagram' })
+    }
   }
 
-  const displayName = chartData.name.toUpperCase()
+  const lockDiagram = async () => {
+    if (!desiredDiagram) return
+
+    try {
+      const res = await fetch('/api/diagrams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'lock',
+          userId: DEMO_USER_ID,
+          diagramId: desiredDiagram.id,
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        setDesiredDiagram({ ...desiredDiagram, isLocked: true })
+        setMessage({ type: 'success', text: '🔒 Diagram locked!' })
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to lock diagram' })
+    }
+  }
+
+  const resetDiagram = async () => {
+    if (!desiredDiagram || !confirm('Reset diagram and collected constellations?')) return
+
+    try {
+      const res = await fetch('/api/diagrams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reset',
+          userId: DEMO_USER_ID,
+          diagramId: desiredDiagram.id,
+        }),
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        setDesiredDiagram({
+          ...desiredDiagram,
+          placements: [],
+          isLocked: false,
+          status: 'active',
+          expiresAt: new Date(data.diagram.expiresAt),
+        })
+        setShowEditor(true)
+        setMessage({ type: 'success', text: '🔄 Diagram reset! 30 days added.' })
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to reset diagram' })
+    }
+  }
+
+  if (loading || !desiredDiagram) {
+    return (
+      <ResultContainer>
+        <Header>
+          <h1>✨ Two-Diagram System</h1>
+          <p>Original Birth Chart (immutable) + Desired Diagram (editable with QR collection)</p>
+        </Header>
+        <Section style={{ textAlign: 'center', color: '#666' }}>
+          <div style={{ fontSize: 18, marginBottom: 8 }}>⏳ Loading your diagrams...</div>
+          {debugStatus && (
+            <div style={{ fontSize: 13, color: '#444' }}>Status: {debugStatus}</div>
+          )}
+          {!debugStatus && (
+            <div style={{ fontSize: 12, color: '#999' }}>Starting...</div>
+          )}
+          {message && (
+            <div style={{ marginTop: 12, color: message.type === 'error' ? '#721c24' : '#155724' }}>
+              {message.text}
+            </div>
+          )}
+        </Section>
+      </ResultContainer>
+    )
+  }
 
   return (
     <ResultContainer>
-      <ChartSection>
-        <ToggleButtons>
-          <ToggleButton
-            $active={viewMode === 'chart'}
-            onClick={() => setViewMode('chart')}
-          >
-            CHART
-          </ToggleButton>
-          <ToggleButton
-            $active={viewMode === 'table'}
-            onClick={() => setViewMode('table')}
-          >
-            TABLE
-          </ToggleButton>
-        </ToggleButtons>
+      <Header>
+        <h1>✨ Two-Diagram System</h1>
+        <p>Original Birth Chart (immutable) + Desired Diagram (editable with QR collection)</p>
+      </Header>
 
-        {viewMode === 'chart' ? (
-          <ChartWrapper onClick={handleChartClick}>
-            {(apiChartData?.chartSvgUrl || apiChartData?.output) ? (
-              <>
-                <img
-                  src={apiChartData.chartSvgUrl || apiChartData.output}
-                  alt="Birth Chart"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'contain',
-                    pointerEvents: 'none',
-                  }}
-                  onError={(e) => {
-                    console.error('Failed to load chart image:', apiChartData.chartSvgUrl)
-                    e.currentTarget.style.display = 'none'
-                  }}
-                  onLoad={() => {
-                    console.log('Chart image loaded successfully')
-                  }}
-                />
-                <ChartInstructions>
-                  <WandIcon
-                    src="https://production-chani-web-f5e5589aaeda.herokuapp.com/glyphs/icons/star-wand-blk.png"
-                    alt="Black Star Wand"
-                  />
-                  <div>
-                    <p>Click the chart to check the aspects</p>
-                    <p>(aka the relationships between planets)</p>
-                  </div>
-                </ChartInstructions>
-              </>
-            ) : (
-              <>
-                <ChartPlaceholder>
-                  <div style={{ textAlign: 'center', padding: '40px' }}>
-                    <p style={{ fontSize: '14px', color: '#b0b0b0', marginBottom: '20px' }}>
-                      {apiChartData ? 'Loading chart...' : 'Birth Chart Visualization'}
-                    </p>
-                    <p style={{ fontSize: '12px', color: '#888' }}>
-                      {apiChartData 
-                        ? 'Waiting for chart to generate...' 
-                        : 'Chart visualization would appear here. In a production app, this would be generated using an astrology library or API.'}
-                    </p>
-                    {apiChartData && !apiChartData.chartSvgUrl && (
-                      <p style={{ fontSize: '11px', color: '#888', marginTop: '10px' }}>
-                        API Response: {JSON.stringify(apiChartData, null, 2)}
-                      </p>
-                    )}
-                  </div>
-                </ChartPlaceholder>
-                <ChartInstructions>
-                  <WandIcon
-                    src="https://production-chani-web-f5e5589aaeda.herokuapp.com/glyphs/icons/star-wand-blk.png"
-                    alt="Black Star Wand"
-                  />
-                  <div>
-                    <p>Click the chart to check the aspects</p>
-                    <p>(aka the relationships between planets)</p>
-                  </div>
-                </ChartInstructions>
-              </>
-            )}
-          </ChartWrapper>
-        ) : (
-          <TableWrapper data-table-view>
-            <Table>
-              <TableHeader>
-                <TableHeaderRow>
-                  <TableHeaderCell>Planet/Point</TableHeaderCell>
-                  <TableHeaderCell>Sign</TableHeaderCell>
-                  <TableHeaderCell>Degree</TableHeaderCell>
-                  <TableHeaderCell>House</TableHeaderCell>
-                  <TableHeaderCell>Description</TableHeaderCell>
-                </TableHeaderRow>
-              </TableHeader>
-              <TableBody>
-                {[
-                  ...sampleChartData.keys,
-                  ...sampleChartData.planets,
-                  ...sampleChartData.angles,
-                  ...sampleChartData.points,
-                ].map((item, index) => (
-                  <TableRow key={index}>
-                    <TableCell>
-                      <TableIcon
-                        src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
-                        alt={item.name}
-                      />
-                      {item.name}
-                    </TableCell>
-                    <TableCell>{item.sign}</TableCell>
-                    <TableCell>{item.degree}</TableCell>
-                    <TableCell>{item.house}</TableCell>
-                    <TableCell>{item.desc}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableWrapper>
+      {message && (
+        <StatusBox $type={message.type as any}>
+          {message.text}
+        </StatusBox>
+      )}
+
+      {/* Diagram View - Original Chart + Nebula Matrix */}
+      {desiredDiagram && (
+        <>
+          <TwoDiagramView
+            originalChartData={{
+              birthDate: chartData?.date || 'Unknown',
+              birthTime: chartData?.time || 'Unknown',
+              birthLocation: chartData?.location || 'Unknown',
+              placements: [],
+              chartSvgUrl:
+                (apiChartData && apiChartData.chartSvgUrl) || generateFallbackSvgDataUrl(chartData),
+            }}
+            desiredDiagramData={desiredDiagram}
+            collectedConstellations={collectedConstellations}
+            onEditDesired={() => setShowEditor(true)}
+            onCreateNewDesired={createDiagram}
+          />
+
+          {/* Nebula Energy Matrix - Replaces old desired diagram editor */}
+          <NebulaMatrix diagramId={desiredDiagram.id} userId={DEMO_USER_ID} />
+        </>
+      )}
+
+      {/* QR Scan Demo */}
+      <Section>
+        <h2>📱 Scan QR Codes to Collect Constellations</h2>
+        <p>Click to simulate scanning a QR code (in production, use actual QR code scanner):</p>
+        <ButtonGroup>
+          {[
+            { code: 'QR_const_aries', label: 'Aries ♈' },
+            { code: 'QR_const_taurus', label: 'Taurus ♉' },
+            { code: 'QR_const_gemini', label: 'Gemini ♊' },
+            { code: 'QR_const_cancer', label: 'Cancer ♋' },
+            { code: 'QR_const_leo', label: 'Leo ♌' },
+            { code: 'QR_const_virgo', label: 'Virgo ♍' },
+            { code: 'QR_const_libra', label: 'Libra ♎' },
+            { code: 'QR_const_scorpio', label: 'Scorpio ♏' },
+            { code: 'QR_const_sagittarius', label: 'Sagittarius ♐' },
+            { code: 'QR_const_capricorn', label: 'Capricorn ♑' },
+            { code: 'QR_const_aquarius', label: 'Aquarius ♒' },
+            { code: 'QR_const_pisces', label: 'Pisces ♓' },
+          ].map((item) => (
+            <Button
+              key={item.code}
+              onClick={() => scanQRCode(item.code)}
+              $variant="secondary"
+            >
+              {item.label}
+            </Button>
+          ))}
+        </ButtonGroup>
+        <p>
+          <strong>📊 Collected:</strong> {collectedConstellations.length} constellation
+          {collectedConstellations.length !== 1 ? 's' : ''}
+          {collectedConstellations.length > 0 && (
+            <>
+              {' '}
+              ({collectedConstellations
+                .map((c) => c.name)
+                .join(', ')})
+            </>
+          )}
+        </p>
+      </Section>
+
+      {/* Editor - QR Scan Demo (kept for backward compatibility) */}
+      {showEditor && desiredDiagram && (
+        <Section>
+          <h2>🎨 Collect Energies via QR Scan</h2>
+          {collectedConstellations.length === 0 ? (
+            <p style={{ color: '#666' }}>
+              Scan QR codes below to collect constellation energies!
+            </p>
+          ) : (
+            <>
+              <p style={{ color: '#555' }}>
+                You have {collectedConstellations.length} constellation
+                {collectedConstellations.length !== 1 ? 's' : ''} collected.
+              </p>
+              <ButtonGroup style={{ marginTop: '20px' }}>
+                <Button onClick={() => setShowEditor(false)}>✕ Close</Button>
+              </ButtonGroup>
+            </>
+          )}
+        </Section>
+      )}
+
+      {/* Controls */}
+      <Section>
+        <h2>🎮 Diagram Controls</h2>
+        {desiredDiagram && (
+          <>
+            <p>
+              <strong>Status:</strong> {desiredDiagram.status} | <strong>Locked:</strong>{' '}
+              {desiredDiagram.isLocked ? '🔒 Yes' : '🔓 No'} | <strong>Placements:</strong>{' '}
+              {desiredDiagram.placements.length}
+            </p>
+            <p>
+              <strong>Expires:</strong> {desiredDiagram.expiresAt.toLocaleDateString()} at{' '}
+              {desiredDiagram.expiresAt.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+            <ButtonGroup>
+              <Button onClick={() => setShowEditor(!showEditor)}>
+                {showEditor ? '✕ Close' : '✏️ Edit'} Diagram
+              </Button>
+              <Button
+                onClick={lockDiagram}
+                $variant={desiredDiagram.isLocked ? 'secondary' : 'primary'}
+                disabled={desiredDiagram.isLocked}
+              >
+                🔒 Lock
+              </Button>
+              <Button onClick={resetDiagram} $variant="danger">
+                🔄 Reset (30 days)
+              </Button>
+              <Button $variant="secondary" onClick={loadData}>
+                🔃 Reload Data
+              </Button>
+            </ButtonGroup>
+          </>
         )}
-      </ChartSection>
-
-      <ResultContent>
-        <HeaderSection>
-          <ChartTitle>{displayName}'s Birth Chart</ChartTitle>
-          <InfoSection>
-            <InfoRow>
-              <InfoLabel>Date:</InfoLabel>
-              <InfoValue>{formatDate()}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Time:</InfoLabel>
-              <InfoValue>{formatTime()}</InfoValue>
-            </InfoRow>
-            <InfoRow>
-              <InfoLabel>Location:</InfoLabel>
-              <InfoValue>{chartData.location}</InfoValue>
-            </InfoRow>
-            <EditButton onClick={onEdit}>Edit</EditButton>
-          </InfoSection>
-        </HeaderSection>
-
-
-        <Section>
-          <SectionTitle>The Keys to {chartData.name}'s Chart</SectionTitle>
-          {sampleChartData.keys.map((item, index) => {
-            const sectionKey = `keys-${index}`
-            const interpretation = generateInterpretation({
-              name: item.name,
-              sign: item.sign,
-              degree: item.degree,
-              house: item.house
-            })
-            return (
-              <PlacementItem key={index}>
-                <PlacementHeader>
-                  <PlacementIcon
-                    src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
-                    alt={item.name}
-                  />
-                  <PlacementInfo>
-                    {item.name} | {item.sign} | {item.degree} | {item.house}
-                  </PlacementInfo>
-                </PlacementHeader>
-                <PlacementDesc>{item.desc}</PlacementDesc>
-                <PlacementDetail>{item.detail}</PlacementDetail>
-                <InterpretationSection>
-                  <InterpretationToggle onClick={() => toggleSection(sectionKey)}>
-                    <InterpretationTitle>View Details</InterpretationTitle>
-                    <ChevronIcon $isExpanded={isExpanded(sectionKey)} />
-                  </InterpretationToggle>
-                  <InterpretationContent $isExpanded={isExpanded(sectionKey)}>
-                    <InterpretationTitle>What You Are</InterpretationTitle>
-                    <InterpretationText>{interpretation.whatYouAre}</InterpretationText>
-                    
-                    <InterpretationTitle>What You Become</InterpretationTitle>
-                    <InterpretationText>{interpretation.whatYouBecome}</InterpretationText>
-                    
-                    <InterpretationTitle>Detailed Analysis</InterpretationTitle>
-                    <InterpretationText>{interpretation.detailedAnalysis}</InterpretationText>
-                  </InterpretationContent>
-                </InterpretationSection>
-              </PlacementItem>
-            )
-          })}
-        </Section>
-
-        <Section>
-          <SectionTitle>The Planets</SectionTitle>
-          {sampleChartData.planets.map((item, index) => {
-            const sectionKey = `planets-${index}`
-            const interpretation = generateInterpretation({
-              name: item.name,
-              sign: item.sign,
-              degree: item.degree,
-              house: item.house
-            })
-            return (
-              <PlacementItem key={index}>
-                <PlacementHeader>
-                  <PlacementIcon
-                    src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
-                    alt={item.name}
-                  />
-                  <PlacementInfo>
-                    {item.name} | {item.sign} | {item.degree} | {item.house}
-                  </PlacementInfo>
-                </PlacementHeader>
-                <PlacementDesc>{item.desc}</PlacementDesc>
-                <PlacementDetail>{item.detail}</PlacementDetail>
-                <InterpretationSection>
-                  <InterpretationToggle onClick={() => toggleSection(sectionKey)}>
-                    <InterpretationTitle>View Details</InterpretationTitle>
-                    <ChevronIcon $isExpanded={isExpanded(sectionKey)} />
-                  </InterpretationToggle>
-                  <InterpretationContent $isExpanded={isExpanded(sectionKey)}>
-                    <InterpretationTitle>What You Are</InterpretationTitle>
-                    <InterpretationText>{interpretation.whatYouAre}</InterpretationText>
-                    
-                    <InterpretationTitle>What You Become</InterpretationTitle>
-                    <InterpretationText>{interpretation.whatYouBecome}</InterpretationText>
-                    
-                    <InterpretationTitle>Detailed Analysis</InterpretationTitle>
-                    <InterpretationText>{interpretation.detailedAnalysis}</InterpretationText>
-                  </InterpretationContent>
-                </InterpretationSection>
-              </PlacementItem>
-            )
-          })}
-        </Section>
-
-        <Section>
-          <SectionTitle>The Angles</SectionTitle>
-          {sampleChartData.angles.map((item, index) => {
-            const sectionKey = `angles-${index}`
-            const interpretation = generateInterpretation({
-              name: item.name,
-              sign: item.sign,
-              degree: item.degree,
-              house: item.house
-            })
-            return (
-              <PlacementItem key={index}>
-                <PlacementHeader>
-                  <PlacementIcon
-                    src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
-                    alt={item.name}
-                  />
-                  <PlacementInfo>
-                    {item.name} | {item.sign} | {item.degree} | {item.house}
-                  </PlacementInfo>
-                </PlacementHeader>
-                <PlacementDesc>{item.desc}</PlacementDesc>
-                <PlacementDetail>{item.detail}</PlacementDetail>
-                <InterpretationSection>
-                  <InterpretationToggle onClick={() => toggleSection(sectionKey)}>
-                    <InterpretationTitle>View Details</InterpretationTitle>
-                    <ChevronIcon $isExpanded={isExpanded(sectionKey)} />
-                  </InterpretationToggle>
-                  <InterpretationContent $isExpanded={isExpanded(sectionKey)}>
-                    <InterpretationTitle>What You Are</InterpretationTitle>
-                    <InterpretationText>{interpretation.whatYouAre}</InterpretationText>
-                    
-                    <InterpretationTitle>What You Become</InterpretationTitle>
-                    <InterpretationText>{interpretation.whatYouBecome}</InterpretationText>
-                    
-                    <InterpretationTitle>Detailed Analysis</InterpretationTitle>
-                    <InterpretationText>{interpretation.detailedAnalysis}</InterpretationText>
-                  </InterpretationContent>
-                </InterpretationSection>
-              </PlacementItem>
-            )
-          })}
-        </Section>
-
-        <Section>
-          <SectionTitle>The Points, Minor Planets and Asteroids</SectionTitle>
-          {sampleChartData.points.map((item, index) => {
-            const sectionKey = `points-${index}`
-            const interpretation = generateInterpretation({
-              name: item.name,
-              sign: item.sign,
-              degree: item.degree,
-              house: item.house
-            })
-            return (
-              <PlacementItem key={index}>
-                <PlacementHeader>
-                  <PlacementIcon
-                    src={`https://production-chani-web-f5e5589aaeda.herokuapp.com${item.icon}`}
-                    alt={item.name}
-                  />
-                  <PlacementInfo>
-                    {item.name} | {item.sign} | {item.degree} | {item.house}
-                  </PlacementInfo>
-                </PlacementHeader>
-                <PlacementDesc>{item.desc}</PlacementDesc>
-                <PlacementDetail>{item.detail}</PlacementDetail>
-                <InterpretationSection>
-                  <InterpretationToggle onClick={() => toggleSection(sectionKey)}>
-                    <InterpretationTitle>View Details</InterpretationTitle>
-                    <ChevronIcon $isExpanded={isExpanded(sectionKey)} />
-                  </InterpretationToggle>
-                  <InterpretationContent $isExpanded={isExpanded(sectionKey)}>
-                    <InterpretationTitle>What You Are</InterpretationTitle>
-                    <InterpretationText>{interpretation.whatYouAre}</InterpretationText>
-                    
-                    <InterpretationTitle>What You Become</InterpretationTitle>
-                    <InterpretationText>{interpretation.whatYouBecome}</InterpretationText>
-                    
-                    <InterpretationTitle>Detailed Analysis</InterpretationTitle>
-                    <InterpretationText>{interpretation.detailedAnalysis}</InterpretationText>
-                  </InterpretationContent>
-                </InterpretationSection>
-              </PlacementItem>
-            )
-          })}
-        </Section>
-      </ResultContent>
+      </Section>
     </ResultContainer>
   )
 }
-
