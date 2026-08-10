@@ -73,8 +73,8 @@ function birth_chart_embed_shortcode($atts) {
         </iframe>
     </div>';
 }
-add_shortcode('birth_chart', 'birth_chart_embed_shortcode');
-```
+```add_shortcode('birth_chart', 'birth_chart_embed_shortcode');
+
 
 2. Then use in any post/page: `[birth_chart]` or `[birth_chart height="1000px"]`
 
