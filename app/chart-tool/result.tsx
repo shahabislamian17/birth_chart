@@ -386,6 +386,191 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
     }
   }
 
+  const escapePdfText = (text: string) =>
+    text.replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)')
+
+  const wrapText = (text: string, maxLength = 90) => {
+    const words = text.split(' ')
+    const lines: string[] = []
+    let currentLine = ''
+
+    words.forEach((word) => {
+      if (!word) return
+      const nextLine = currentLine ? `${currentLine} ${word}` : word
+      if (nextLine.length <= maxLength) {
+        currentLine = nextLine
+      } else {
+        if (currentLine) lines.push(currentLine)
+        currentLine = word
+      }
+    })
+
+    if (currentLine) lines.push(currentLine)
+    return lines.length ? lines : [text]
+  }
+
+  const getCelestialSummary = () => {
+    const month = Number(chartData?.month || 0)
+    const day = Number(chartData?.date || 0)
+
+    if (!month || !day) {
+      return {
+        sign: 'Unknown',
+        description: 'The stars are still writing your cosmic story. Your birth chart is a unique signature of light, energy, and possibility.',
+      }
+    }
+
+    const signData: Record<string, { name: string; element: string; trait: string; description: string }> = {
+      aries: { name: 'Aries', element: 'fire', trait: 'bold', description: 'A bold and pioneering spirit, Aries brings courage, motion, and fresh beginnings to your path.' },
+      taurus: { name: 'Taurus', element: 'earth', trait: 'grounded', description: 'A grounded and steady soul, Taurus brings calm strength, beauty, and lasting devotion to your journey.' },
+      gemini: { name: 'Gemini', element: 'air', trait: 'curious', description: 'A curious and expressive mind, Gemini brings wit, movement, and a natural love of discovery.' },
+      cancer: { name: 'Cancer', element: 'water', trait: 'nurturing', description: 'A nurturing and intuitive heart, Cancer brings emotional depth, protection, and deep inner wisdom.' },
+      leo: { name: 'Leo', element: 'fire', trait: 'radiant', description: 'A radiant and confident presence, Leo brings warmth, creativity, and magnetic leadership.' },
+      virgo: { name: 'Virgo', element: 'earth', trait: 'thoughtful', description: 'A thoughtful and discerning spirit, Virgo brings clarity, service, and elegant precision.' },
+      libra: { name: 'Libra', element: 'air', trait: 'balanced', description: 'A balanced and harmonious soul, Libra brings charm, fairness, and a gift for meaningful connection.' },
+      scorpio: { name: 'Scorpio', element: 'water', trait: 'intense', description: 'An intense and transformative presence, Scorpio brings depth, resilience, and powerful inner knowing.' },
+      sagittarius: { name: 'Sagittarius', element: 'fire', trait: 'adventurous', description: 'An adventurous and visionary spirit, Sagittarius brings optimism, freedom, and a love of truth.' },
+      capricorn: { name: 'Capricorn', element: 'earth', trait: 'disciplined', description: 'A disciplined and ambitious soul, Capricorn brings structure, purpose, and enduring strength.' },
+      aquarius: { name: 'Aquarius', element: 'air', trait: 'visionary', description: 'A visionary and original mind, Aquarius brings insight, independence, and future-focused wisdom.' },
+      pisces: { name: 'Pisces', element: 'water', trait: 'dreamy', description: 'A dreamy and compassionate heart, Pisces brings intuition, softness, and spiritual imagination.' },
+    }
+
+    const zodiac =
+      (month === 1 && day >= 20) || (month === 2 && day <= 18)
+        ? signData.aquarius
+        : (month === 2 && day >= 19) || (month === 3 && day <= 20)
+          ? signData.pisces
+          : (month === 3 && day >= 21) || (month === 4 && day <= 19)
+            ? signData.aries
+            : (month === 4 && day >= 20) || (month === 5 && day <= 20)
+              ? signData.taurus
+              : (month === 5 && day >= 21) || (month === 6 && day <= 20)
+                ? signData.gemini
+                : (month === 6 && day >= 21) || (month === 7 && day <= 22)
+                  ? signData.cancer
+                  : (month === 7 && day >= 23) || (month === 8 && day <= 22)
+                    ? signData.leo
+                    : (month === 8 && day >= 23) || (month === 9 && day <= 22)
+                      ? signData.virgo
+                      : (month === 9 && day >= 23) || (month === 10 && day <= 22)
+                        ? signData.libra
+                        : (month === 10 && day >= 23) || (month === 11 && day <= 21)
+                          ? signData.scorpio
+                          : (month === 11 && day >= 22) || (month === 12 && day <= 21)
+                            ? signData.sagittarius
+                            : signData.capricorn
+
+    return {
+      sign: zodiac.name,
+      description: `${zodiac.description} This ${zodiac.element} energy gives your life a ${zodiac.trait} rhythm.`,
+    }
+  }
+
+  const downloadSummaryPdf = () => {
+    const { sign, description } = getCelestialSummary()
+    const summaryLines = [
+      'Cosmos Breath Birth Chart',
+      'Celestial Summary',
+      '',
+      `Name: ${chartData?.name || 'Unknown'}`,
+      `Birth Date: ${chartData?.date || 'Unknown'} / ${chartData?.month || 'Unknown'} / ${chartData?.year || 'Unknown'}`,
+      `Birth Time: ${chartData?.time || 'Unknown'}`,
+      `Location: ${chartData?.location || 'Unknown'}`,
+      '',
+      `Your stars: ${sign}`,
+      description,
+      '',
+      `Diagram Status: ${desiredDiagram?.status || 'Unknown'}`,
+      `Locked: ${desiredDiagram?.isLocked ? 'Yes' : 'No'}`,
+      `Placements: ${desiredDiagram?.placements?.length ?? 0}`,
+      `Collected Constellations: ${collectedConstellations.length}`,
+      `Constellations: ${
+        collectedConstellations.length > 0
+          ? collectedConstellations.map((entry) => entry.name).join(', ')
+          : 'None yet'
+      }`,
+      '',
+      'Generated from the Cosmos Breath Birth Chart experience',
+    ]
+
+    const contentCommands: string[] = []
+    contentCommands.push('0.19 0.10 0.33 rg')
+    contentCommands.push('50 690 512 92 re f')
+    contentCommands.push('1 1 1 rg')
+    contentCommands.push('BT /F2 18 Tf 70 748 Td (Cosmos Breath Birth Chart) Tj ET')
+    contentCommands.push('BT /F1 10 Tf 70 728 Td (Your celestial signature) Tj ET')
+    contentCommands.push('0.25 0.25 0.25 rg')
+    contentCommands.push('50 670 512 1 re S')
+
+    let yPosition = 635
+    const addText = (text: string, size = 11, isBold = false, x = 60) => {
+      const font = isBold ? 'F2' : 'F1'
+      const escaped = escapePdfText(text)
+      contentCommands.push(`BT /${font} ${size} Tf ${x} ${yPosition} Td (${escaped}) Tj ET`)
+      yPosition -= size + 4
+    }
+
+    summaryLines.forEach((line, index) => {
+      if (!line) {
+        yPosition -= 6
+        return
+      }
+
+      const wrapped = wrapText(line, 80)
+      wrapped.forEach((wrappedLine, wrappedIndex) => {
+        if (index === 0) {
+          addText(wrappedLine, 18, true, 70)
+        } else if (index === 1) {
+          addText(wrappedLine, 12, false, 70)
+        } else if (wrappedIndex === 0 && line.includes('Your stars:')) {
+          addText(wrappedLine, 13, true, 60)
+        } else if (wrappedIndex === 0 && line.includes('Name:')) {
+          addText(wrappedLine, 11, true, 60)
+        } else if (line.includes('Generated from')) {
+          addText(wrappedLine, 9, false, 60)
+        } else {
+          addText(wrappedLine, 11, false, 60)
+        }
+      })
+    })
+
+    const contentStream = contentCommands.join('\n')
+    const objects = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>',
+      `<< /Length ${contentStream.length} >>\nstream\n${contentStream}\nendstream`,
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
+    ]
+
+    const pdfParts: string[] = ['%PDF-1.4\n']
+    const offsets: number[] = []
+
+    objects.forEach((objectContent, index) => {
+      offsets.push(pdfParts.join('').length)
+      pdfParts.push(`${index + 1} 0 obj\n${objectContent}\nendobj\n`)
+    })
+
+    const xrefOffset = pdfParts.join('').length
+    pdfParts.push(`xref\n0 ${objects.length + 1}\n`)
+    pdfParts.push('0000000000 65535 f \n')
+    offsets.forEach((offset) => {
+      pdfParts.push(`${String(offset).padStart(10, '0')} 00000 n \n`)
+    })
+    pdfParts.push(`trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`)
+
+    const pdfBlob = new Blob([pdfParts.join('')], { type: 'application/pdf' })
+    const url = URL.createObjectURL(pdfBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'birth-chart-summary.pdf'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   const resetDiagram = async () => {
     if (!desiredDiagram || !confirm('Reset diagram and collected constellations?')) return
 
@@ -569,6 +754,9 @@ export default function ResultPage({ chartData, apiChartData, onEdit }: ResultPa
                 disabled={desiredDiagram.isLocked}
               >
                 🔒 Lock
+              </Button>
+              <Button onClick={downloadSummaryPdf} $variant="secondary">
+                ⬇️ Download PDF
               </Button>
               <Button onClick={resetDiagram} $variant="danger">
                 🔄 Reset (30 days)
